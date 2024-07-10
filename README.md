@@ -17,6 +17,7 @@ Make sure to install `@libsql/client` if you don't already have it.
 ```ts
 import { createClient } from "@libsql/client";
 import * as Sentry from "@sentry/node";
+import { libsqlIntegration } from "sentry-integration-libsql-client";
 
 const libsqlClient = createClient({
   url: "...",
