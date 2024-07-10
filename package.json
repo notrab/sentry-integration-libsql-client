@@ -1,0 +1,81 @@
+{
+  "name": "sentry-integration-libsql-client",
+  "description": "Sentry integration for @libsql/client",
+  "version": "0.0.0-development",
+  "license": "MIT",
+  "repository": "notrab/sentry-integration-libsql-client",
+  "keywords": [
+    "turso",
+    "tursodatabase",
+    "sqlite",
+    "libsql",
+    "sentry",
+    "integration"
+  ],
+  "contributors": [
+    "Jamie Barton <jamie@notrab.dev>"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch --clean=false",
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "semantic-release": "semantic-release"
+  },
+  "peerDependencies": {
+    "@libsql/client": "^0.7.0",
+    "@sentry/node": "^8.11.0"
+  },
+  "devDependencies": {
+    "@libsql/client": "0.7.0",
+    "@sentry/node": "^8.17.0",
+    "@sentry/types": "^8.17.0",
+    "semantic-release": "^24.0.0",
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "sqlite-statement-type": "^1.1.0"
+  },
+  "tsup": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "splitting": true,
+    "sourcemap": true,
+    "clean": true,
+    "dts": true,
+    "format": [
+      "esm",
+      "cjs"
+    ],
+    "skipNodeModulesBundle": true,
+    "externals": [
+      "node_modules"
+    ]
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": {
+        "node": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "node": "./dist/index.cjs",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
