@@ -1,15 +1,7 @@
-# demo
+# Sentry + libSQL Integration
 
-To install dependencies:
+## Setup
 
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.0.15. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+1. Install dependencies using `bun install`
+2. Add Sentry DSN to `index.ts`
+3. Run `bun run index.ts`

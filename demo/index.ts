@@ -10,8 +10,7 @@ import * as Sentry from "@sentry/node";
 import { libsqlIntegration } from "../src";
 
 const libsqlClient = createClient({
-  url: "libsql://...",
-  authToken: "...",
+  url: "file:dev.db",
 });
 
 Sentry.init({
@@ -26,10 +25,12 @@ Sentry.init({
 });
 
 libsqlClient
-  .execute("CREATE TABLE IF NOT EXISTS users (name)")
-  .then(console.log);
-libsqlClient
-  .execute(`INSERT INTO users (name) VALUES ("Jamie")`)
+  .batch([
+    "CREATE TABLE IF NOT EXISTS users (name TEXT)",
+    "INSERT INTO users (name) VALUES ('Jamie')",
+  ])
   .then(console.log);
 libsqlClient.execute("SELECT * FROM users").then(console.log);
-libsqlClient.execute("SELECT * FROM tabledoesntexist").then(console.log);
+
+// uncomment to invoke error
+// libsqlClient.execute("SELECT * FROM tabledoesntexist").then(console.log);
