@@ -28,7 +28,13 @@ Sentry.init({
   dsn: "...",
   tracesSampleRate: 1,
   profilesSampleRate: 1,
-  integrations: [libsqlIntegration(libsqlClient, Sentry)],
+  integrations: [
+    libsqlIntegration(client, Sentry, {
+      tracing: true,
+      breadcrumbs: true,
+      errors: true,
+    }),
+  ],
 });
 
 await libsqlClient.execute("SELECT * FROM users");
