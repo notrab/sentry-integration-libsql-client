@@ -39,3 +39,13 @@ Sentry.init({
 
 await libsqlClient.execute("SELECT * FROM users");
 ```
+
+## Not yet got a database?
+
+1. [![Create Database](https://sqlite.new/button)](https://sqlite.new)
+2. Copy the Database URL, and create an auth token for your database
+3. Install the libSQL SDK
+
+```bash
+npm install @libsql/client
+```
