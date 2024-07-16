@@ -20,7 +20,7 @@ import * as Sentry from "@sentry/node";
 import { libsqlIntegration } from "sentry-integration-libsql-client";
 
 const libsqlClient = createClient({
-  url: "...",
+  url: "libsql://...",
   authToken: "...",
 });
 
