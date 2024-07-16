@@ -15,9 +15,7 @@ const libsqlClient = createClient({
 });
 
 Sentry.init({
-  dsn: "https://ccf1d142a24db91da5e0d3926277f6fe@o4507576416403456.ingest.de.sentry.io/4507576457560144",
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
+  dsn: "...",
   integrations: [
     libsqlIntegration(libsqlClient, Sentry, {
       errors: true,
@@ -34,3 +32,4 @@ libsqlClient
   .execute(`INSERT INTO users (name) VALUES ("Jamie")`)
   .then(console.log);
 libsqlClient.execute("SELECT * FROM users").then(console.log);
+libsqlClient.execute("SELECT * FROM tabledoesntexist").then(console.log);
