@@ -27,7 +27,7 @@ const libsqlClient = createClient({
 Sentry.init({
   dsn: "...",
   integrations: [
-    libsqlIntegration(client, Sentry, {
+    libsqlIntegration(libsqlClient, Sentry, {
       tracing: true,
       breadcrumbs: true,
       errors: true,
