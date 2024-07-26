@@ -1,6 +1,7 @@
 import {
   Client,
   InStatement,
+  ResultSet,
   Transaction,
   TransactionMode,
 } from "@libsql/client";
@@ -93,35 +94,92 @@ export function libsqlIntegration(
 
       const originalBatch = client.batch;
       client.batch = function (stmts: InStatement[]) {
-        const batchOperation = async (span?: Span) => {
+        const batchOperation = async (parentSpan?: Span) => {
           if (options.breadcrumbs) {
             Sentry.addBreadcrumb({
               category: "libsql",
-              message: "Executing batch SQL statements",
+              message: "Starting batch SQL operation",
               data: { stmtCount: stmts.length },
             });
           }
 
           try {
-            const result = await originalBatch.call(this, stmts);
+            const results = await Sentry.startSpan(
+              {
+                op: "db.batch",
+                name: "libsql.batch",
+                parentSpan: parentSpan,
+              },
+              async (batchSpan: Span) => {
+                const statementResults: ResultSet[] = [];
 
-            if (span) {
-              span.setAttribute("stmtCount", stmts.length);
-              span.setStatus({ code: 1 });
+                for (let i = 0; i < stmts.length; i++) {
+                  const stmt = stmts[i];
+                  const sql = typeof stmt === "string" ? stmt : stmt.sql;
+                  const statementType = getStatementType(sql);
+
+                  await Sentry.startSpan(
+                    {
+                      op: `db.${statementType}`,
+                      name: `libsql.batch.statement.${i}`,
+                      parentSpan: batchSpan,
+                    },
+                    async (statementSpan: Span) => {
+                      try {
+                        const result = await originalExecute.call(this, stmt);
+                        statementResults.push(result);
+
+                        if (statementSpan) {
+                          statementSpan.setAttribute(
+                            "rows_affected",
+                            result.rowsAffected
+                          );
+                          statementSpan.setStatus({ code: 1 }); // Set success status
+                        }
+
+                        if (options.breadcrumbs) {
+                          Sentry.addBreadcrumb({
+                            category: "libsql",
+                            message: `Batch statement ${i} executed successfully`,
+                            data: { sql, rowsAffected: result.rowsAffected },
+                          });
+                        }
+                      } catch (error) {
+                        if (statementSpan) {
+                          statementSpan.setStatus({ code: 2 });
+                        }
+
+                        if (options.errors) {
+                          Sentry.captureException(error);
+                        }
+
+                        throw error;
+                      }
+                    }
+                  );
+                }
+
+                return statementResults;
+              }
+            );
+
+            if (parentSpan) {
+              parentSpan.setAttribute("statements_count", stmts.length);
+              parentSpan.setStatus({ code: 1 }); // Set success status
             }
 
             if (options.breadcrumbs) {
               Sentry.addBreadcrumb({
                 category: "libsql",
-                message: "Batch SQL statements executed successfully",
+                message: "Batch SQL operation completed successfully",
                 data: { stmtCount: stmts.length },
               });
             }
 
-            return result;
+            return results;
           } catch (error) {
-            if (span) {
-              span.setStatus({ code: 2 });
+            if (parentSpan) {
+              parentSpan.setStatus({ code: 2 });
             }
 
             if (options.errors) {
@@ -223,7 +281,7 @@ export function libsqlIntegration(
                   {
                     op: "db.commit",
                     name: "libsql.transaction.commit",
-                    parentSpan: parentSpan,
+                    parentSpan,
                   },
                   commitOperation
                 );
@@ -283,7 +341,7 @@ export function libsqlIntegration(
                   {
                     op: "db.rollback",
                     name: "libsql.transaction.rollback",
-                    parentSpan: parentSpan,
+                    parentSpan,
                   },
                   rollbackOperation
                 );
