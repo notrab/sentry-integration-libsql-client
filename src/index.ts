@@ -53,6 +53,15 @@ export function libsqlIntegration(
 
             if (span) {
               span.setAttribute("rows_affected", result.rowsAffected);
+              span.setStatus({ code: 1 });
+            }
+
+            if (options.breadcrumbs) {
+              Sentry.addBreadcrumb({
+                category: "libsql",
+                message: "SQL statement executed successfully",
+                data: { sql, rowsAffected: result.rowsAffected },
+              });
             }
 
             return result;
@@ -79,6 +88,60 @@ export function libsqlIntegration(
           );
         } else {
           return executeOperation();
+        }
+      };
+
+      const originalBatch = client.batch;
+      client.batch = function (stmts: InStatement[]) {
+        const batchOperation = async (span?: Span) => {
+          if (options.breadcrumbs) {
+            Sentry.addBreadcrumb({
+              category: "libsql",
+              message: "Executing batch SQL statements",
+              data: { stmtCount: stmts.length },
+            });
+          }
+
+          try {
+            const result = await originalBatch.call(this, stmts);
+
+            if (span) {
+              span.setAttribute("stmtCount", stmts.length);
+              span.setStatus({ code: 1 });
+            }
+
+            if (options.breadcrumbs) {
+              Sentry.addBreadcrumb({
+                category: "libsql",
+                message: "Batch SQL statements executed successfully",
+                data: { stmtCount: stmts.length },
+              });
+            }
+
+            return result;
+          } catch (error) {
+            if (span) {
+              span.setStatus({ code: 2 });
+            }
+
+            if (options.errors) {
+              Sentry.captureException(error);
+            }
+
+            throw error;
+          }
+        };
+
+        if (options.tracing) {
+          return Sentry.startSpan(
+            {
+              op: "db.batch",
+              name: "libsql.batch",
+            },
+            batchOperation
+          );
+        } else {
+          return batchOperation();
         }
       };
 
@@ -125,8 +188,16 @@ export function libsqlIntegration(
                   if (span) {
                     span.setStatus({ code: 1 });
                   }
+
                   if (parentSpan) {
                     parentSpan.setStatus({ code: 1 });
+                  }
+
+                  if (options.breadcrumbs) {
+                    Sentry.addBreadcrumb({
+                      category: "libsql",
+                      message: "Transaction committed successfully",
+                    });
                   }
 
                   return result;
@@ -134,6 +205,7 @@ export function libsqlIntegration(
                   if (span) {
                     span.setStatus({ code: 2 });
                   }
+
                   if (parentSpan) {
                     parentSpan.setStatus({ code: 2 });
                   }
@@ -176,8 +248,16 @@ export function libsqlIntegration(
                   if (span) {
                     span.setStatus({ code: 1 });
                   }
+
                   if (parentSpan) {
                     parentSpan.setStatus({ code: 1 });
+                  }
+
+                  if (options.breadcrumbs) {
+                    Sentry.addBreadcrumb({
+                      category: "libsql",
+                      message: "Transaction rolled back successfully",
+                    });
                   }
 
                   return result;
@@ -185,6 +265,7 @@ export function libsqlIntegration(
                   if (span) {
                     span.setStatus({ code: 2 });
                   }
+
                   if (parentSpan) {
                     parentSpan.setStatus({ code: 2 });
                   }
