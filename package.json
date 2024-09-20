@@ -23,11 +23,11 @@
     "semantic-release": "semantic-release"
   },
   "peerDependencies": {
-    "@libsql/client": "^0.7.0 || ^0.12.0",
+    "@libsql/client": "^0.7.0 || ^0.12.0 || ^0.14.0",
     "@sentry/node": "^8.11.0"
   },
   "devDependencies": {
-    "@libsql/client": "0.12.0",
+    "@libsql/client": "0.14.0",
     "@sentry/node": "^8.17.0",
     "@sentry/types": "^8.17.0",
     "semantic-release": "^24.0.0",
