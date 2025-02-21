@@ -50,7 +50,7 @@ export function libsqlIntegration(
           }
 
           try {
-            const result = await originalExecute.call(this, stmt);
+            const result = await originalExecute.call(client, stmt);
 
             if (span) {
               span.setAttribute("rows_affected", result.rowsAffected);
@@ -126,7 +126,7 @@ export function libsqlIntegration(
                     },
                     async (statementSpan: Span) => {
                       try {
-                        const result = await originalExecute.call(this, stmt);
+                        const result = await originalExecute.call(client, stmt);
                         statementResults.push(result);
 
                         if (statementSpan) {
@@ -227,7 +227,7 @@ export function libsqlIntegration(
 
             const originalExecute = transaction.execute;
             transaction.execute = function (stmt: InStatement) {
-              return client.execute.call(this, stmt);
+              return client.execute.call(client, stmt);
             };
 
             const originalCommit = transaction.commit;
@@ -241,7 +241,7 @@ export function libsqlIntegration(
                 }
 
                 try {
-                  const result = await originalCommit.call(this);
+                  const result = await originalCommit.call(transaction);
 
                   if (span) {
                     span.setStatus({ code: 1 });
@@ -301,7 +301,7 @@ export function libsqlIntegration(
                 }
 
                 try {
-                  const result = await originalRollback.call(this);
+                  const result = await originalRollback.call(transaction);
 
                   if (span) {
                     span.setStatus({ code: 1 });
